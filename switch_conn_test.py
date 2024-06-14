@@ -56,6 +56,7 @@ def main():
     message = []
 
     now = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
+    print(now)
     message.append(now)
     # switch
     for s in bmc_check_list:
@@ -71,9 +72,9 @@ def main():
         message.append("[-] BMC(73) 10.30.3.76 is DOWN!")
     # server
     if check_ssh("10.30.3.75", user="root", psw=os.getenv('PSW_SERVER')) :
-        message.append("[+] Server[{}] is UP!".format(s))
+        message.append("[+] Server[10.30.3.75] is UP!")
     else :
-        message.append("[-] Server[{}] is DOWN!".format(s))
+        message.append("[-] Server[10.30.3.75] is DOWN!")
     
     line_notify(message)
 
