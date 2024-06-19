@@ -22,18 +22,31 @@ def check_ssh(ip, user, psw):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
-        client.connect(ip, port, user, psw)
-        print("[+] Connection Success!")
+        client.connect(ip, port, user, psw, timeout=5)
         if ip in bmc_check_list:
             stdin, stdout, stderr = client.exec_command("curl http://[fe80::ff:fe00:1%usb0]:8080/api/sys/bmc")
-            result = stdout.readlines()[0]
-            print(json.dumps(json.loads(result), indent=4))
-        return True, None
+            # read stdout/stderr
+            stdout_output = stdout.read().decode().strip()
+            stderr_output = stderr.read().decode().strip()
+
+            if "Could not resolve host" in stderr_output:
+                print("[-] Connection Failed : Could not resolve host.")
+                return False, stdout_output
+            elif "Failed to connect" in stderr_output:
+                print("[-] Connection Failed : Connection refused.")
+                return False, stdout_output
+            else:
+                print("[+] Connection Success!")
+                print(json.dumps(json.loads(stdout_output), indent=4))
+                return True, None
+        else:
+            print("[+] Connection Success!")
+            return True, None
+    except paramiko.SSHException as e:
+        print(f"[-] SSH connection error: {e}")
+        return False, e
     except Exception as e:
-        print("[-] Connection Fail!")
-        print("========================")
-        print(e)
-        print("========================")
+        print(f"[-] Unexpected error: {e}")
         return False, e
 
 def line_notify(msg):
@@ -67,13 +80,14 @@ def main():
             message.append("[-] Switch[{}] is DOWN! \n[-] {}".format(s, msg))
 
     # 73 bmc
-    result, msg = check_ssh(s, user="root", psw=os.getenv('PSW_NEW'))
+    result, msg = check_ssh("10.30.3.76", user="root", psw=os.getenv('PSW_BMC'))
     if result:
         message.append("[+] BMC(73) 10.30.3.76 is UP!")
     else :
         message.append("[-] BMC(73) 10.30.3.76 is DOWN!\n[-] {}".format(msg))
     # server
-    if check_ssh("10.30.3.75", user="root", psw=os.getenv('PSW_SERVER')) :
+    result, msg = check_ssh("10.30.3.75", user="root", psw=os.getenv('PSW_SERVER'))
+    if result:
         message.append("[+] Server[10.30.3.75] is UP!")
     else :
         message.append("[-] Server[10.30.3.75] is DOWN!")
