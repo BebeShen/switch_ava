@@ -60,16 +60,18 @@ def main():
     message.append(now)
     # switch
     for s in bmc_check_list:
-        if check_ssh(s, user="root", psw=os.getenv('PSW_NEW')):
+        result, msg = check_ssh(s, user="root", psw=os.getenv('PSW_NEW'))
+        if result:
             message.append("[+] Switch[{}] is UP!".format(s))
         else:
-            message.append("[-] Switch[{}] is DOWN!".format(s))
+            message.append("[-] Switch[{}] is DOWN! \n[-] {}".format(s, msg))
 
     # 73 bmc
-    if check_ssh("10.30.3.76", user="root", psw=os.getenv('PSW_BMC')) :
+    result, msg = check_ssh(s, user="root", psw=os.getenv('PSW_NEW'))
+    if result:
         message.append("[+] BMC(73) 10.30.3.76 is UP!")
     else :
-        message.append("[-] BMC(73) 10.30.3.76 is DOWN!")
+        message.append("[-] BMC(73) 10.30.3.76 is DOWN!\n[-] {}".format(msg))
     # server
     if check_ssh("10.30.3.75", user="root", psw=os.getenv('PSW_SERVER')) :
         message.append("[+] Server[10.30.3.75] is UP!")
