@@ -25,16 +25,17 @@ def check_ssh(ip, user, psw):
         client.connect(ip, port, user, psw, timeout=5)
         if ip in bmc_check_list:
             stdin, stdout, stderr = client.exec_command("curl http://[fe80::ff:fe00:1%usb0]:8080/api/sys/bmc")
+            
             # read stdout/stderr
             stdout_output = stdout.read().decode().strip()
             stderr_output = stderr.read().decode().strip()
 
-            if "Could not resolve host" in stderr_output:
+            if str(stdout.channel.recv_exit_status()) == "6":
                 print("[-] Connection Failed : Could not resolve host.")
-                return False, stdout_output
-            elif "Failed to connect" in stderr_output:
+                return False, "Connection Failed : Could not resolve host."
+            elif str(stdout.channel.recv_exit_status()) == "7":
                 print("[-] Connection Failed : Connection refused.")
-                return False, stdout_output
+                return False, "Connection Failed : Connection refused."
             else:
                 print("[+] Connection Success!")
                 print(json.dumps(json.loads(stdout_output), indent=4))
