@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 bmc_check_list = [
+    "10.30.3.67",
     "10.30.3.68",
     "10.30.3.69",
     "10.30.3.70",
@@ -80,6 +81,12 @@ def main():
         else:
             message.append("[-] Switch[{}] is DOWN! \n[-] {}".format(s, msg))
 
+    # 68 bmc
+    result, msg = check_ssh("10.30.3.78", user="root", psw=os.getenv('PSW_BMC'))
+    if result:
+        message.append("[+] BMC(68) 10.30.3.78 is UP!")
+    else :
+        message.append("[-] BMC(68) 10.30.3.78 is DOWN!\n[-] {}".format(msg))
     # 73 bmc
     result, msg = check_ssh("10.30.3.76", user="root", psw=os.getenv('PSW_BMC'))
     if result:
